@@ -11,6 +11,7 @@ import {
   onUpdated,
   watch,
 } from "vue";
+import {getComponentName} from "../__tests/runtime-test";
 
 type ConcreteComponent = any;
 // type VNode = any;
@@ -185,7 +186,7 @@ const KeepAliveImpl: ComponentOptions = {
       let vnode = rawVNode;
       const comp = vnode.type as ConcreteComponent;
 
-      const name = vnode.type.__name;
+      const name = getComponentName(comp); //vnode.type.__name;
 
       const {include, exclude, max} = props;
 
@@ -201,13 +202,6 @@ const KeepAliveImpl: ComponentOptions = {
       const cachedVNode = cache.get(key);
 
       pendingCacheKey = key;
-
-      console.log(
-        "%c [  ]-149",
-        "font-size:13px; background:pink; color:#bf2c9f;",
-        cachedVNode,
-        vnode
-      );
 
       if (cachedVNode) {
         vnode.el = cachedVNode.el;
