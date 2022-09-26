@@ -7,4 +7,4 @@ const app = createApp(App);
 
 app.mount("#app");
 
-app.component("MyKeepAlive", MyKeepAlive);
+app.component("my-keep-alive", MyKeepAlive);
