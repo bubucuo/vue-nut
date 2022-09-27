@@ -11,9 +11,9 @@
 <template>
   <button type="button" @click="count++">count is {{ count }}</button>
 
-  <my-keep-alive>
+  <keep-alive>
     <Input v-if="count % 2" />
-  </my-keep-alive>
+  </keep-alive>
 </template>
 
 <style scoped></style>
