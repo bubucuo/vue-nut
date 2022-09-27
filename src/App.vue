@@ -4,15 +4,14 @@
   import Input from "./components/Input.vue";
 
   import {ref} from "vue";
-
   const count = ref(1);
 </script>
 
 <template>
   <button type="button" @click="count++">count is {{ count }}</button>
 
-  <keep-alive>
-    <Input v-if="count % 2" />
+  <keep-alive max="3">
+    <component :is="Input" v-if="count % 2" />
   </keep-alive>
 </template>
 
