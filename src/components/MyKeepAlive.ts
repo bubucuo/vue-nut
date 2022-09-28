@@ -19,24 +19,13 @@ import {
 } from "vue";
 
 export const MyKeepAlive = {
-  // name: `my-keep-alive`,
-  name: "my-keep-alive",
+  name: "MyKeepAlive",
   __isKeepAlive: true,
 
   setup(props: KeepAliveProps, setupContext: SetupContext) {
     const {slots} = setupContext;
 
-    console.log(
-      "%c [  ]-29",
-      "font-size:13px; background:pink; color:#bf2c9f;",
-      slots.default
-    );
-
     return () => {
-      console.log(
-        "%c [  ]-36",
-        "font-size:13px; background:pink; color:#bf2c9f;"
-      );
       return "omg";
     };
   },
