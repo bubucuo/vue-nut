@@ -30,10 +30,19 @@ export interface KeepAliveContext extends ComponentRenderContext {
 
 type CacheKey = string | number | symbol | ConcreteComponent;
 type Cache = Map<CacheKey, VNode>; // 存储节点
+type Keys = Set<CacheKey>;
+//
+
+//  2 3 1
 
 export const MyKeepAlive = {
   name: "MyKeepAlive",
   __isKeepAlive: true,
+  props: {
+    include: [String, RegExp, Array],
+    exclude: [String, RegExp, Array],
+    max: [String, Number],
+  },
 
   setup(props: KeepAliveProps, {slots}: SetupContext) {
     const instance = getCurrentInstance()!;
@@ -44,6 +53,7 @@ export const MyKeepAlive = {
       renderer: {
         p: patch,
         m: move,
+        um: _unmount,
         o: {createElement},
       },
     } = sharedContext;
@@ -60,6 +70,22 @@ export const MyKeepAlive = {
       move(vnode, storageContainer, null, MoveType.LEAVE);
     };
 
+    function unmount(vnode: VNode) {
+      resetShapeFlags(vnode);
+      _unmount(vnode, instance, null, true);
+    }
+
+    function pruneCacheEntry(key: CacheKey) {
+      const cached = cache.get(key);
+      if (!current && cached?.type !== current?.type) {
+        unmount(cached);
+      } else if (current) {
+        resetShapeFlags(current);
+      }
+
+      cache.delete(key);
+      keys.delete(key);
+    }
     let pendingCacheKey: CacheKey | null = null;
 
     const cacheSubtree = () => {
@@ -72,22 +98,38 @@ export const MyKeepAlive = {
     onUpdated(cacheSubtree);
 
     const cache: Cache = new Map();
+    const keys: Keys = new Set();
+    let current: VNode | null = null;
+
     return () => {
       pendingCacheKey = null;
       if (!slots.default) {
         return null;
       }
       const children = slots.default();
+      const vnode = children[0];
+
       if (children.length > 1) {
         console.warn("出错了");
+        current = vnode;
         return children;
       }
-
-      const vnode = children[0];
 
       const comp = vnode.type as ConcreteComponent;
 
       const key = vnode.key === null ? comp : vnode.key;
+
+      const {max, include, exclude} = props;
+
+      const name = comp.__name;
+
+      if (
+        (include && (!name || !matches(include, name))) ||
+        (exclude && name && matches(exclude, name))
+      ) {
+        current = vnode;
+        return vnode;
+      }
 
       pendingCacheKey = key;
 
@@ -97,10 +139,21 @@ export const MyKeepAlive = {
         vnode.component = cachedVNode.component;
 
         vnode.shapeFlag |= ShapeFlags.COMPONENT_KEPT_ALIVE;
+
+        keys.delete(key);
+        keys.add(key);
+      } else {
+        keys.add(key);
+
+        if (max && keys.size > parseInt(max as string, 10)) {
+          // 修建缓存区域,删除最近最少使用的节点
+          pruneCacheEntry(keys.values().next().value);
+        }
       }
 
       vnode.shapeFlag |= ShapeFlags.COMPONENT_SHOULD_KEEP_ALIVE;
 
+      current = vnode;
       return vnode;
     };
   },
@@ -124,4 +177,31 @@ export const enum MoveType {
   ENTER,
   LEAVE,
   REORDER,
+}
+
+function resetShapeFlags(vnode: VNode) {
+  let shapeFlag = vnode.shapeFlag;
+
+  if (shapeFlag & ShapeFlags.COMPONENT_SHOULD_KEEP_ALIVE) {
+    shapeFlag -= ShapeFlags.COMPONENT_SHOULD_KEEP_ALIVE;
+  } else if (shapeFlag & ShapeFlags.COMPONENT_KEPT_ALIVE) {
+    shapeFlag -= ShapeFlags.COMPONENT_KEPT_ALIVE;
+  }
+  vnode.shapeFlag = shapeFlag;
+}
+
+type MatchPattern = string | RegExp | (string | RegExp)[];
+export const isArray = Array.isArray;
+export const isString = (val: unknown): val is string =>
+  typeof val === "string";
+function matches(pattern: MatchPattern, name: string): boolean {
+  if (isArray(pattern)) {
+    return pattern.some((p: string | RegExp) => matches(p, name));
+  } else if (isString(pattern)) {
+    return pattern.split(",").includes(name);
+  } else if (pattern.test) {
+    return pattern.test(name);
+  }
+  /* istanbul ignore next */
+  return false;
 }
