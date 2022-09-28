@@ -10,9 +10,9 @@
 <template>
   <button type="button" @click="count++">count is {{ count }}</button>
 
-  <keep-alive max="3">
+  <my-keep-alive>
     <component :is="Input" v-if="count % 2" />
-  </keep-alive>
+  </my-keep-alive>
 </template>
 
 <style scoped></style>

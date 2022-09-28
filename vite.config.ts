@@ -6,9 +6,11 @@ export default defineConfig({
   plugins: [
     vue({
       template: {
-        compilerOptions: {
-          isCustomElement: (tag) => ["my-keep-alive"].includes(tag),
-        },
+        // compilerOptions: {
+        //   isCustomElement: (tag) => {
+        //     return tag.indexOf("my-keep-alive") > -1;
+        //   },
+        // },
       },
     }),
   ],
