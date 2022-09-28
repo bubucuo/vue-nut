@@ -42,6 +42,7 @@ export const MyKeepAlive = {
 
     const {
       renderer: {
+        p: patch,
         m: move,
         o: {createElement},
       },
@@ -50,6 +51,8 @@ export const MyKeepAlive = {
     const storageContainer = createElement("div");
 
     sharedContext.activate = (vnode, container, anchor) => {
+      const instance = vnode.component;
+      patch(instance?.vnode, vnode, container, anchor, instance);
       move(vnode, container, anchor, MoveType.ENTER);
     };
 

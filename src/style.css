@@ -79,3 +79,13 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+
+.border {
+  border:solid 1px red;
+}
+
+
+a {
+  margin: 10px;
+}
